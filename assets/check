@@ -22,6 +22,7 @@ configure_credentials $payload
 uri=$(jq -r '.source.uri // ""' < $payload)
 branch=$(jq -r '.source.branch // ""' < $payload)
 paths="$(jq -r '(.source.paths // ["."])[]' < $payload)" # those "'s are important
+depth=$(jq -r '(.source.depth // 0)' < $payload)
 ignore_paths="$(jq -r '":!" + (.source.ignore_paths // [])[]' < $payload)" # these ones too
 tag_filter=$(jq -r '.source.tag_filter // ""' < $payload)
 git_config_payload=$(jq -r '.source.git_config // []' < $payload)
@@ -42,7 +43,12 @@ else
     branchflag="--branch $branch"
   fi
 
-  git clone --single-branch $uri $branchflag $destination
+depthflag=""
+if test "$depth" -gt 0 2> /dev/null; then
+  depthflag="--depth $depth"
+fi
+
+  git clone --single-branch $depthflag $uri $branchflag $destination
   cd $destination
 fi
 
